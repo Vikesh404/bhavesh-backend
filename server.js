@@ -2,7 +2,6 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const path = require("path");
 
 const authRoutes = require("./routes/auth");
 const otpRoutes = require("./routes/otp");
@@ -10,38 +9,44 @@ const profileRoutes = require("./routes/profile");
 
 const app = express();
 
-// MIDDLEWARE
-app.use(cors());
+// ===== MIDDLEWARE =====
 app.use(express.json());
 
-// FRONTEND STATIC FILES
+// CORS CONFIG (Allow frontend domain)
 app.use(
-  express.static(path.join(__dirname, "../frontend"), { extensions: ["html"] })
+  cors({
+    origin: ["https://www.bhaveshrao.online", "http://localhost:3000"],
+    credentials: true,
+  })
 );
 
-// API ROUTES
+// ===== TEST ROUTE =====
+app.get("/", (req, res) => {
+  res.json({
+    status: "success",
+    message: "Backend running successfully 🎉",
+  });
+});
+
+// ===== API ROUTES =====
 app.use("/auth", authRoutes);
 app.use("/otp", otpRoutes);
 app.use("/profile", profileRoutes);
 
-// FALLBACK HANDLER
+// ===== 404 HANDLER FOR WRONG API =====
 app.use((req, res) => {
-  if (req.originalUrl.startsWith("/auth") ||
-      req.originalUrl.startsWith("/otp") ||
-      req.originalUrl.startsWith("/profile"))
-    return res.status(404).json({ error: "API route not found" });
-
-  return res.sendFile(path.join(__dirname, "../frontend", "index.html"));
+  return res.status(404).json({ error: "API route not found" });
 });
 
-// DB CONNECT
+// ===== DATABASE CONNECTION =====
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.log("DB Error:", err));
 
-// SERVER START
+// ===== START SERVER =====
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () =>
-  console.log(`Server running at http://localhost:${PORT}`)
-);
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
