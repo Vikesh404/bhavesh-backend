@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const OTP = require("../models/OTP");
-const sendEmail = require("../Utils/sendEmail");   // CHECK CASE!
+const sendEmail = require("../Utils/sendEmail");
 
-// SEND OTP
+// SEND OTP (Signup)
 router.post("/signup-send", async (req, res) => {
   try {
     const { email } = req.body;
@@ -14,10 +14,10 @@ router.post("/signup-send", async (req, res) => {
 
     await sendEmail(email, "Signup OTP", `Your OTP is ${otp}`);
 
-    res.json({ message: "OTP sent successfully" });
+    return res.json({ message: "OTP sent successfully" });
   } catch (err) {
     console.error("Signup OTP Error:", err);
-    res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ error: "Server error sending OTP" });
   }
 });
 
