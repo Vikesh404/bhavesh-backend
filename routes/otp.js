@@ -40,3 +40,7 @@ router.post("/signup-verify", async (req, res) => {
     return res.status(500).json({ error: "Server error verifying OTP" });
   }
 });
+
+module.exports = router;
+
+
