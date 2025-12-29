@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const OTP = require("../models/OTP");
-const sendEmail = require("../Utils/sendEmail");
+const sendEmail = require("../Utils/sendEmail");   // CHECK CASE!
 
-// SEND OTP (Signup)
+// SEND OTP
 router.post("/signup-send", async (req, res) => {
   try {
     const { email } = req.body;
@@ -12,20 +12,21 @@ router.post("/signup-send", async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000);
     await OTP.create({ email, otp, expiresAt: Date.now() + 5 * 60 * 1000 });
 
-    await sendEmail(email, "Signup OTP", `Your OTP is ${otp}`); // FIXED
+    await sendEmail(email, "Signup OTP", `Your OTP is ${otp}`);
 
-    return res.json({ message: "OTP sent successfully" });
+    res.json({ message: "OTP sent successfully" });
   } catch (err) {
     console.error("Signup OTP Error:", err);
-    return res.status(500).json({ error: "Server error sending OTP" });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-// VERIFY SIGNUP OTP
+// VERIFY OTP
 router.post("/signup-verify", async (req, res) => {
   try {
     const { email, otp } = req.body;
-    if (!email || !otp) return res.status(400).json({ error: "Email and OTP required" });
+    if (!email || !otp)
+      return res.status(400).json({ error: "Email and OTP required" });
 
     const record = await OTP.findOne({ email });
     if (!record) return res.status(400).json({ error: "OTP not found" });
@@ -33,14 +34,12 @@ router.post("/signup-verify", async (req, res) => {
     if (record.otp !== otp) return res.status(400).json({ error: "Invalid OTP" });
 
     await OTP.deleteOne({ email });
-
     return res.json({ verified: true });
+
   } catch (err) {
-    console.error("Signup Verify Error:", err);
-    return res.status(500).json({ error: "Server error verifying OTP" });
+    console.error("Verify OTP Error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
 module.exports = router;
-
-
