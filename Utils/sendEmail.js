@@ -1,24 +1,29 @@
-const nodemailer = require("nodemailer");
+const axios = require("axios");
 
 async function sendEmail(to, subject, text) {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_SECURE === "true",
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+  try {
+    const apiKey = process.env.BREVO_API_KEY;
 
-  const mailOptions = {
-    from: `"BhaveshRao" <${process.env.SMTP_USER}>`,
-    to,
-    subject,
-    text,
-  };
+    await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: { email: "noreply@bhaveshrao.online", name: "BhaveshRao" },
+        to: [{ email: to }],
+        subject,
+        textContent: text,
+      },
+      {
+        headers: {
+          "api-key": apiKey,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-  await transporter.sendMail(mailOptions);
+    console.log("OTP Email Sent →", to);
+  } catch (err) {
+    console.log("Brevo Error:", err.message);
+  }
 }
 
 module.exports = sendEmail;
