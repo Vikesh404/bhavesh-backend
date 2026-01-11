@@ -8,10 +8,28 @@ const app = express();
 /* =======================
    MIDDLEWARE
 ======================= */
+const allowedOrigins = [
+  "http://127.0.0.1:5500",
+  "http://localhost:5500",
+  "http://localhost:10000",
+  "http://127.0.0.1:10000",
+  "https://bhavesh-frontend.vercel.app" // keep for future
+];
+
 app.use(cors({
-  origin: "http://127.0.0.1:5500",
+  origin: function (origin, callback) {
+    // allow requests with no origin (Postman, mobile apps)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
+
 
 app.use(express.json());
 
