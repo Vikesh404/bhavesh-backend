@@ -10,17 +10,20 @@ const app = express();
 ======================= */
 
 const allowedOrigins = [
+  // Local development
   "http://127.0.0.1:5500",
   "http://localhost:5500",
   "http://localhost:10000",
   "http://127.0.0.1:10000",
 
-  // ✅ REAL VERCEL FRONTEND (IMPORTANT)
+  // Vercel frontend
   "https://bhavesh-rho.vercel.app",
 
-  // (optional – keep if you plan another frontend)
-  "https://bhavesh-frontend.vercel.app"
+  // Custom domain (IMPORTANT)
+  "https://bhaveshrao.online",
+  "https://www.bhaveshrao.online"
 ];
+
 
 app.use(
   cors({
@@ -101,3 +104,4 @@ app.listen(PORT, () => {
   console.log("🟢 Backend status: ACTIVE");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 });
+
