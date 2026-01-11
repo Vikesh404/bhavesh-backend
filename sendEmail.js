@@ -1,27 +1,41 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // true for 465, false for 587
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
+  }
+});
+
+// ✅ Verify transporter at startup
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ Email transporter verification failed:", error.message);
+  } else {
+    console.log("✅ Email transporter is ready to send emails");
   }
 });
 
 module.exports = async (to, subject, text) => {
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"BhaveshRao" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       text
     });
 
-    console.log(`📧 OTP email sent to ${to}`);
+    console.log("📧 Email sent:", info.response);
     return true;
 
   } catch (err) {
-    console.error("❌ Email send error:", err.message);
+    console.error("❌ Email send error:", err);
     return false;
   }
 };
