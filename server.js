@@ -24,7 +24,6 @@ const allowedOrigins = [
   "https://www.bhaveshrao.online"
 ];
 
-
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -104,4 +103,3 @@ app.listen(PORT, () => {
   console.log("🟢 Backend status: ACTIVE");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 });
-
