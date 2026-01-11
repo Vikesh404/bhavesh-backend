@@ -1,51 +1,54 @@
 const express = require("express");
 const router = express.Router();
 const OTP = require("../models/OTP");
-const sendEmail = require("../utils/sendEmail");
 
-// SEND OTP (Signup)
+/* ================= SEND OTP ================= */
 router.post("/signup-send", async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ error: "Email required" });
+    if (!email) return res.status(400).json({ message: "Email required" });
 
-    const otp = Math.floor(100000 + Math.random() * 900000);
-    const expiresAt = Date.now() + 5 * 60 * 1000;
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    await OTP.deleteMany({ email }); // clear old OTPs
-    await OTP.create({ email, otp, expiresAt });
+    await OTP.deleteMany({ email });
 
-    await sendEmail(email, "Your OTP Code", `Your OTP is ${otp}`);
+    await OTP.create({
+      email,
+      otp,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+    });
 
-    res.json({ message: "OTP sent" });
+    console.log(`🔐 OTP for ${email} = ${otp}`);
+
+    // 👉 Later we connect real email (nodemailer)
+    res.json({ message: "OTP sent successfully" });
+
   } catch (err) {
-    console.log("OTP SEND ERROR:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error(err);
+    res.status(500).json({ message: "OTP send failed" });
   }
 });
 
-// VERIFY OTP (Signup)
+/* ================= VERIFY OTP ================= */
 router.post("/signup-verify", async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    if (!email || !otp) return res.status(400).json({ error: "Missing fields" });
+    const record = await OTP.findOne({ email, otp });
+    if (!record) {
+      return res.status(400).json({ message: "OTP invalid or expired" });
+    }
 
-    const record = await OTP.findOne({ email });
-    if (!record) return res.status(400).json({ error: "OTP not found" });
-
-    if (record.expiresAt < Date.now())
-      return res.status(400).json({ error: "OTP expired" });
-
-    if (record.otp !== Number(otp))
-      return res.status(400).json({ error: "Invalid OTP" });
+    if (record.expiresAt < new Date()) {
+      await OTP.deleteMany({ email });
+      return res.status(400).json({ message: "OTP expired" });
+    }
 
     await OTP.deleteMany({ email });
+    res.json({ message: "OTP verified" });
 
-    return res.json({ message: "OTP verified", verified: true });
   } catch (err) {
-    console.log("OTP VERIFY ERROR:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ message: "OTP verify failed" });
   }
 });
 

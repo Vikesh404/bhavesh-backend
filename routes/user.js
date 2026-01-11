@@ -7,12 +7,13 @@ const auth = require("../middleware/auth");
 router.get("/me", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    if (!user) return res.status(404).json({ error: "User not found" });
-
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
     res.json(user);
   } catch (err) {
     console.error("GET PROFILE ERROR:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -21,33 +22,27 @@ router.put("/me", auth, async (req, res) => {
   try {
     const { name, dob, phone, address } = req.body;
 
-    const updateData = {};
-    if (name && name.trim()) updateData.name = name.trim();
-    if (dob !== undefined) updateData.dob = dob;
-    if (phone !== undefined) updateData.phone = phone;
-    if (address !== undefined) updateData.address = address;
+    const update = {
+      name,
+      dob,
+      phone,
+      address
+    };
 
-    if (Object.keys(updateData).length === 0) {
-      return res.status(400).json({ error: "No valid fields to update" });
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
       req.user.id,
-      updateData,
+      update,
       { new: true, runValidators: true }
     ).select("-password");
 
-    if (!updatedUser) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
     res.json({
       message: "Profile updated successfully",
-      user: updatedUser,
+      user
     });
+
   } catch (err) {
-    console.error("PROFILE UPDATE ERROR:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error("UPDATE PROFILE ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

@@ -1,33 +1,79 @@
-require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-
-const authRoutes = require("./routes/auth");
-const otpRoutes = require("./routes/otp");
-const profileRoutes = require("./routes/profile");
+require("dotenv").config();
 
 const app = express();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+/* =======================
+   MIDDLEWARE
+======================= */
 app.use(cors({
-  origin: "*",
-  methods: ["GET","POST","PUT","DELETE"],
+  origin: "http://127.0.0.1:5500",
+  credentials: true
 }));
 
-// Routes
-app.use("/auth", authRoutes);
-app.use("/otp", otpRoutes);
-app.use("/profile", profileRoutes);
+app.use(express.json());
 
-// Fallback
-app.use((req, res) => res.status(404).json({ error: "API route not found" }));
+/* =======================
+   SERVER STATUS ROUTES
+======================= */
 
-// DB CONNECT + SERVER START
+// ✅ Root route (important for Render / monitoring)
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    message: "✅ Server is running successfully"
+  });
+});
+
+// ✅ Health check route
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    server: "UP",
+    timestamp: new Date().toISOString()
+  });
+});
+
+/* =======================
+   APPLICATION ROUTES
+======================= */
+app.use("/otp", require("./routes/otp"));
+app.use("/auth", require("./routes/auth"));
+app.use("/user", require("./routes/user"));
+
+/* =======================
+   DATABASE CONNECTION
+======================= */
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
-    console.log("MongoDB Connected");
-    app.listen(10000, () => console.log("🚀 Server running on port 10000"));
+    console.log("✅ MongoDB connected");
   })
-  .catch(err => console.error("DB Error:", err));
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err.message);
+  });
+
+/* =======================
+   GLOBAL ERROR HANDLER
+======================= */
+app.use((err, req, res, next) => {
+  console.error("🔥 Backend Error:", err.message);
+
+  res.status(500).json({
+    status: "ERROR",
+    message: "Something went wrong in backend",
+    error: err.message
+  });
+});
+
+/* =======================
+   START SERVER
+======================= */
+const PORT = process.env.PORT || 10000;
+
+app.listen(PORT, () => {
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log("🟢 Backend status: ACTIVE");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+});

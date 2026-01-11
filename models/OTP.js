@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
 
-const otpSchema = new mongoose.Schema({
-  email: String,
-  otp: Number,
-  expiresAt: Number,
+const OTPSchema = new mongoose.Schema({
+  email: { type: String, required: true, lowercase: true },
+  otp: { type: String, required: true },
+  expiresAt: { type: Date, required: true }
 });
 
-module.exports = mongoose.model("OTP", otpSchema);
+/* 🔥 Prevent OverwriteModelError */
+module.exports = mongoose.models.OTP || mongoose.model("OTP", OTPSchema);
