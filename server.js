@@ -8,28 +8,35 @@ const app = express();
 /* =======================
    MIDDLEWARE
 ======================= */
+
 const allowedOrigins = [
   "http://127.0.0.1:5500",
   "http://localhost:5500",
   "http://localhost:10000",
   "http://127.0.0.1:10000",
-  "https://bhavesh-frontend.vercel.app" // keep for future
+
+  // ✅ REAL VERCEL FRONTEND (IMPORTANT)
+  "https://bhavesh-rho.vercel.app",
+
+  // (optional – keep if you plan another frontend)
+  "https://bhavesh-frontend.vercel.app"
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (Postman, mobile apps)
-    if (!origin) return callback(null, true);
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow Postman, mobile apps, server-to-server
+      if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true
-}));
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
 
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true
+  })
+);
 
 app.use(express.json());
 
@@ -37,7 +44,7 @@ app.use(express.json());
    SERVER STATUS ROUTES
 ======================= */
 
-// ✅ Root route (important for Render / monitoring)
+// Root route (Render health check)
 app.get("/", (req, res) => {
   res.status(200).json({
     status: "OK",
@@ -45,7 +52,7 @@ app.get("/", (req, res) => {
   });
 });
 
-// ✅ Health check route
+// Health check
 app.get("/health", (req, res) => {
   res.status(200).json({
     server: "UP",
@@ -63,13 +70,12 @@ app.use("/user", require("./routes/user"));
 /* =======================
    DATABASE CONNECTION
 ======================= */
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("✅ MongoDB connected");
-  })
-  .catch((err) => {
-    console.error("❌ MongoDB connection error:", err.message);
-  });
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) =>
+    console.error("❌ MongoDB connection error:", err.message)
+  );
 
 /* =======================
    GLOBAL ERROR HANDLER
@@ -91,7 +97,7 @@ const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
   console.log("🟢 Backend status: ACTIVE");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 });
